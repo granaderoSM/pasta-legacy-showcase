@@ -53,10 +53,6 @@ function Logo() {
         alt="Granaderos Logo"
         className="h-12 w-12 object-contain transition-transform group-hover:scale-105"
       />
-      <div className="leading-tight">
-        <div className="font-display text-lg font-bold text-[var(--brand-navy)]">Bellantonio</div>
-        <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--brand-crimson)]">Pastificio · 1975</div>
-      </div>
     </a>
   );
 }
