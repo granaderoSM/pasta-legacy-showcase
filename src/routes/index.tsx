@@ -48,10 +48,11 @@ const socials = [
 function Logo() {
   return (
     <a href="#top" className="flex items-center gap-3 group">
-      <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--brand-navy)] text-[var(--brand-gold)] font-display text-lg font-bold ring-2 ring-[var(--brand-gold)] ring-offset-2 ring-offset-background transition-transform group-hover:rotate-6">
-          B
-        <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-[var(--brand-crimson)] ring-2 ring-background" />
-      </span>
+      <img
+        src="/Granaderos.png"
+        alt="Granaderos Logo"
+        className="h-12 w-12 object-contain transition-transform group-hover:scale-105"
+      />
       <div className="leading-tight">
         <div className="font-display text-lg font-bold text-[var(--brand-navy)]">Bellantonio</div>
         <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--brand-crimson)]">Pastificio · 1975</div>
