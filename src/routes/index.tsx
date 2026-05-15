@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-pasta.jpg";
 import heritageImg from "@/assets/heritage.jpg";
 import pTagliatelle from "@/assets/product-tagliatelle.jpg";
@@ -7,13 +9,27 @@ import pRavioli from "@/assets/product-ravioli.jpg";
 import pSpaghetti from "@/assets/product-spaghetti.jpg";
 import pConchiglie from "@/assets/product-conchiglie.jpg";
 import pPappardelle from "@/assets/product-pappardelle.jpg";
-import { Instagram, Facebook, Youtube, Music2, MapPin, Mail, Phone } from "lucide-react";
+import { Instagram, Facebook, Youtube, Music2, MapPin, Mail, Phone, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const products = [
+const WHATSAPP_NUMBER = "5493512658291"; // +54 9 351 265 8291
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  "Ciao Pastificio Bellantonio! Vorrei più informazioni sui vostri prodotti.",
+)}`;
+
+type DbProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  weight: number | null;
+  unit: string | null;
+  image_url: string | null;
+};
+
+const fallbackProducts = [
   { name: "Tagliatelle all'Uovo", desc: "Egg ribbons, slow-dried 36 hours.", img: pTagliatelle, tag: "Fresh" },
   { name: "Rigatoni Bronzo", desc: "Bronze-cut tubes, ridged for sauce.", img: pRigatoni, tag: "Classico" },
   { name: "Ravioli Ricotta & Spinaci", desc: "Hand-folded, sheep's milk ricotta.", img: pRavioli, tag: "Ripieni" },
@@ -120,6 +136,19 @@ function Stat({ n, label }: { n: string; label: string }) {
 }
 
 function Products() {
+  const [items, setItems] = useState<DbProduct[] | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id,name,description,weight,unit,image_url")
+      .order("sort_order")
+      .order("created_at")
+      .then(({ data }) => setItems((data as DbProduct[]) ?? []));
+  }, []);
+
+  const useDb = items && items.length > 0;
+
   return (
     <section id="products" className="bg-[var(--brand-cream)] py-24">
       <div className="mx-auto max-w-7xl px-6">
@@ -132,21 +161,45 @@ function Products() {
         </div>
 
         <div className="mt-14 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((p) => (
-            <article key={p.name} className="group relative overflow-hidden rounded-3xl bg-background shadow-[var(--shadow-card)] ring-1 ring-border/60 transition hover:-translate-y-1 hover:shadow-[var(--shadow-warm)]">
-              <div className="relative aspect-[4/5] overflow-hidden">
-                <img src={p.img} alt={p.name} loading="lazy" width={900} height={1100} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <span className="absolute left-4 top-4 rounded-full bg-[var(--brand-navy)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-gold)]">{p.tag}</span>
-              </div>
-              <div className="flex items-start justify-between gap-4 p-6">
-                <div>
-                  <h3 className="font-display text-xl font-bold text-[var(--brand-navy)]">{p.name}</h3>
-                  <p className="mt-1.5 text-sm text-muted-foreground">{p.desc}</p>
-                </div>
-                <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--brand-navy)]/20 text-[var(--brand-navy)] transition group-hover:bg-[var(--brand-crimson)] group-hover:text-primary-foreground group-hover:border-transparent">→</span>
-              </div>
-            </article>
-          ))}
+          {useDb
+            ? items!.map((p) => (
+                <article key={p.id} className="group relative overflow-hidden rounded-3xl bg-background shadow-[var(--shadow-card)] ring-1 ring-border/60 transition hover:-translate-y-1 hover:shadow-[var(--shadow-warm)]">
+                  <div className="relative aspect-[4/5] overflow-hidden bg-[var(--brand-cream)]">
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-muted-foreground">No image</div>
+                    )}
+                    {(p.weight || p.unit) && (
+                      <span className="absolute left-4 top-4 rounded-full bg-[var(--brand-navy)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-gold)]">
+                        {p.weight ?? ""} {p.unit ?? ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-start justify-between gap-4 p-6">
+                    <div>
+                      <h3 className="font-display text-xl font-bold text-[var(--brand-navy)]">{p.name}</h3>
+                      {p.description && <p className="mt-1.5 text-sm text-muted-foreground">{p.description}</p>}
+                    </div>
+                    <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label={`Ask about ${p.name} on WhatsApp`} className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--brand-navy)]/20 text-[var(--brand-navy)] transition group-hover:bg-[var(--brand-crimson)] group-hover:text-primary-foreground group-hover:border-transparent">→</a>
+                  </div>
+                </article>
+              ))
+            : fallbackProducts.map((p) => (
+                <article key={p.name} className="group relative overflow-hidden rounded-3xl bg-background shadow-[var(--shadow-card)] ring-1 ring-border/60 transition hover:-translate-y-1 hover:shadow-[var(--shadow-warm)]">
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    <img src={p.img} alt={p.name} loading="lazy" width={900} height={1100} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <span className="absolute left-4 top-4 rounded-full bg-[var(--brand-navy)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-gold)]">{p.tag}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4 p-6">
+                    <div>
+                      <h3 className="font-display text-xl font-bold text-[var(--brand-navy)]">{p.name}</h3>
+                      <p className="mt-1.5 text-sm text-muted-foreground">{p.desc}</p>
+                    </div>
+                    <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--brand-navy)]/20 text-[var(--brand-navy)] transition group-hover:bg-[var(--brand-crimson)] group-hover:text-primary-foreground group-hover:border-transparent">→</span>
+                  </div>
+                </article>
+              ))}
         </div>
       </div>
     </section>
@@ -261,6 +314,22 @@ function Index() {
       <Products />
       <Story />
       <Contact />
+      <WhatsAppFab />
     </main>
+  );
+}
+
+function WhatsAppFab() {
+  return (
+    <a
+      href={WHATSAPP_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chat with us on WhatsApp"
+      className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-warm)] ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:bg-[#1ebe5d]"
+    >
+      <MessageCircle className="h-5 w-5" />
+      <span className="hidden sm:inline">WhatsApp</span>
+    </a>
   );
 }
