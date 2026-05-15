@@ -49,7 +49,7 @@ function Logo() {
   return (
     <a href="#top" className="flex items-center gap-3 group">
       <img
-        src="../assets/granaderos.png"
+        src="/granaderos.png"
         alt="Granaderos Logo"
         className="h-12 w-12 object-contain transition-transform group-hover:scale-105"
       />
